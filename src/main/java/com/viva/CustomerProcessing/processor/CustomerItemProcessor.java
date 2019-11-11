@@ -21,17 +21,22 @@ public class CustomerItemProcessor implements ItemProcessor<Customer, Customer> 
 	@Autowired	
 	JobListener job;
 	
+	Set<Customer> fileData = new HashSet<Customer>();
+	
+	
 	@Override
     public Customer process(Customer customer) {
+		 
 		Slf4jLogger logger = new Slf4jLogger(App.class);
-		if(job.success.contains(customer)) {
+		
+		if(job.success.contains(customer) || fileData.contains(customer)) {
     		logger.info("Customer with phone number "+customer.getPhoneNumber()+" --------------> Registartion Status Failed.");
     		return null;
     	}
     	else {
+    		fileData.add(customer);
     		logger.info("Customer with phone number "+customer.getPhoneNumber()+" --------------> Registartion Status Success.");
     		return customer;
-    	}    	
-
+    	}
     }
 }

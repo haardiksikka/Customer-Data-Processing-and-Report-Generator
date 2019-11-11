@@ -6,7 +6,7 @@
 	<file>${LOG_PATH}/customerdata.log</file>
     <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
       <!-- rollover daily -->
-      <fileNamePattern>${LOG_PATH}/customerdata-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+      <fileNamePattern>${LOG_PATH}/cpa-%d{yyyy-MM-dd}.%i.log</fileNamePattern>
       <timeBasedFileNamingAndTriggeringPolicy
             class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
         <maxFileSize>100MB</maxFileSize>
@@ -18,11 +18,11 @@
  </appender>
  
  
- <logger name="com.viva.CustomerProcessing.logger" level="INFO" additivity="false">
+ <logger name="com.viva.CustomerProcessing" level="INFO" additivity="false">
     <appender-ref ref="FileAppender"/>
  </logger>
  
- <logger name="com.viva.CustomerProcessing" level="INFO" additivity="false">
+ <logger name="com.viva.CustomerProcessing.processor" level="DEBUG" additivity="false">
     <appender-ref ref="FileAppender"/>
  </logger>
   

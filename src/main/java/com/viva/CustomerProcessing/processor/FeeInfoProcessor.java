@@ -25,16 +25,17 @@ public class FeeInfoProcessor implements ItemProcessor<Customer, FeeInfo> {
 	
 	FeeInfo feeinfo=new FeeInfo();
 	
+	Set<Customer> fileData = new HashSet<Customer>();
+	
 	@Override
     public FeeInfo process(Customer customer) {
 		
-		if(job.success.contains(customer)) {
-    		System.out.println("failed");
+		if(job.success.contains(customer) || fileData.contains(customer)) {    		
     		return null;
     	}
     	else {
-    	  feeinfo.setPhoneNumber(customer.getPhoneNumber());
-    		System.out.println("success");
+    		fileData.add(customer);
+    		feeinfo.setPhoneNumber(customer.getPhoneNumber());   		
     		return feeinfo;
     	}    	
 
