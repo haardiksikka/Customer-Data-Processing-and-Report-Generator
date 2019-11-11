@@ -11,6 +11,7 @@ import org.springframework.batch.item.ItemProcessor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 
+import com.viva.CustomerProcessing.App;
 import com.viva.CustomerProcessing.Listener.JobListener;
 import com.viva.CustomerProcessing.model.Customer;
 import com.viva.CustomerProcessing.model.FeeInfo;
@@ -22,8 +23,7 @@ public class FeeInfoProcessor implements ItemProcessor<Customer, FeeInfo> {
 	FeeInfo fee=new FeeInfo();
 	@Autowired	
 	JobListener job;
-	
-	FeeInfo feeinfo=new FeeInfo();
+
 	
 	Set<Customer> fileData = new HashSet<Customer>();
 	
@@ -35,8 +35,9 @@ public class FeeInfoProcessor implements ItemProcessor<Customer, FeeInfo> {
     	}
     	else {
     		fileData.add(customer);
-    		feeinfo.setPhoneNumber(customer.getPhoneNumber());   		
-    		return feeinfo;
+    		fee.setFeeAmount(App.getFeeAmount());
+    		fee.setPhoneNumber(customer.getPhoneNumber());   		
+    		return fee;
     	}    	
 
     }

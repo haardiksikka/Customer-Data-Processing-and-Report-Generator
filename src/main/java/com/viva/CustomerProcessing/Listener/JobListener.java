@@ -23,9 +23,9 @@ import org.springframework.jdbc.datasource.DriverManagerDataSource;
 public class JobListener implements JobExecutionListener {
 	
 	private  final String driverClassName = "org.mariadb.jdbc.Driver";
-    private  final String url = "jdbc:mariadb://localhost:3309/test";
+    private  final String url = "jdbc:mariadb://localhost:3309/customer_processing";
     private  final String dbUsername = "root";
-    private  final String dbPassword = "root@123";
+    private  final String dbPassword = "root123";
     
     @Autowired
     private  DataSource dataSource;

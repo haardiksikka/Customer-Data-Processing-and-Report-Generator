@@ -151,7 +151,7 @@
 		<property name="sql">
 		<value>
             <![CDATA[        
-            	insert into fee_info(phone_number,fee_amount,created_on) values (:phoneNumber,100,now())
+            	insert into fee_info(phone_number,fee_amount,created_on) values (:phoneNumber,:feeAmount,now())
             ]]>
 			</value>
 			</property>
