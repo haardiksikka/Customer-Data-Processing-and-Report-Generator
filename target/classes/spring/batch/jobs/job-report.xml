@@ -1,0 +1,226 @@
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:batch="http://www.springframework.org/schema/batch" 
+	xmlns:task="http://www.springframework.org/schema/task"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/batch
+		http://www.springframework.org/schema/batch/spring-batch-2.2.xsd
+		http://www.springframework.org/schema/beans 
+		http://www.springframework.org/schema/beans/spring-beans-3.2.xsd" >
+
+    <bean id="report" class="com.viva.CustomerProcessing.model.Customer" scope="prototype" />
+    
+	<batch:job id="reportJob">
+		
+		<batch:step id="step1" next="step2">
+			<batch:tasklet>
+				<batch:chunk reader="customerFileItemReader" writer="customerDetailDbWriter"
+					processor="customerItemProcessor" commit-interval="2" />
+		    
+			</batch:tasklet>
+		</batch:step>
+		
+		<batch:step id="step2" next="step3">
+			<batch:tasklet>
+				<batch:chunk reader="cvsFileItemReader" writer="customerFeeDetailsWriter" processor="feeInfoItemProcessor"
+					commit-interval="2" >
+					
+				</batch:chunk>
+			</batch:tasklet>
+		</batch:step>
+		
+		
+			<batch:step id="step3" >
+			<batch:tasklet>
+				<batch:chunk reader="databaseItemReader" writer="flatFileItemWriter"
+					commit-interval="2">
+				</batch:chunk>
+			</batch:tasklet>
+			
+		</batch:step>
+		
+		 <!-- Actual Job -->
+ <!--   <batch:step id="step4">
+            <batch:tasklet transaction-manager="transactionManager">
+                <batch:chunk reader="databaseItemReader" writer="flatFileItemWriter"
+                    processor="itemProcessor" commit-interval="10" />
+            </batch:tasklet>
+        </batch:step> -->
+        
+
+   
+		
+		<batch:listeners>
+				<batch:listener ref="jobListner"  />
+	 </batch:listeners>
+		
+	
+	</batch:job>
+	
+
+	<bean id="customerFileItemReader" class="org.springframework.batch.item.file.FlatFileItemReader">
+
+		<!-- Read a csv file -->
+		<property name="resource" value="classpath:csvfile/customerdata.csv" />
+
+		<property name="lineMapper">
+			<bean class="org.springframework.batch.item.file.mapping.DefaultLineMapper">
+
+				<!-- split it -->
+				<property name="lineTokenizer">
+					<bean
+						class="org.springframework.batch.item.file.transform.DelimitedLineTokenizer">
+						<property name="names" value="firstName,middleName,lastName,Address,City,phoneNumber" />
+					</bean>
+				</property>
+
+				<property name="fieldSetMapper">
+				    
+				    <!-- return back to reader, rather than a mapped object. -->
+				    <!--
+				    	<bean class="org.springframework.batch.item.file.mapping.PassThroughFieldSetMapper" />
+				    -->
+				      
+					<!-- map to an object -->
+					<bean
+						class="org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper">
+						<property name="prototypeBeanName" value="report" />
+					</bean>
+					
+				</property>
+
+			</bean>
+		</property>
+
+	</bean>
+
+
+   
+
+
+	<bean id="customerDetailDbWriter"
+		class="org.springframework.batch.item.database.JdbcBatchItemWriter">
+		<property name="dataSource" ref="dataSource" />
+		<property name="sql">
+			<value>
+            <![CDATA[        
+            	insert into customer(first_name,middle_name,last_name,address,city,phone_number) values (:firstName, :middleName, :lastName, :Address,:City,:phoneNumber)
+            ]]>
+			</value>
+			
+		</property>
+		<!-- It will take care matching between object property and sql name parameter -->
+		<property name="itemSqlParameterSourceProvider">
+			<bean
+				class="org.springframework.batch.item.database.BeanPropertyItemSqlParameterSourceProvider" />
+		</property>
+		
+		</bean>
+		
+		
+		
+		
+			<bean id="cvsFileItemReader" class="org.springframework.batch.item.file.FlatFileItemReader">
+
+		<!-- Read a csv file -->
+		<property name="resource" value="classpath:csvfile/customerdata.csv" />
+
+		<property name="lineMapper">
+			<bean class="org.springframework.batch.item.file.mapping.DefaultLineMapper">
+
+				<!-- split it -->
+				<property name="lineTokenizer">
+					<bean
+						class="org.springframework.batch.item.file.transform.DelimitedLineTokenizer">
+						<property name="names" value="firstName,middleName,lastName,Address,City,phoneNumber" />
+					</bean>
+				</property>
+
+				<property name="fieldSetMapper">
+				    
+				    <!-- return back to reader, rather than a mapped object. -->
+				    <!--
+				    	<bean class="org.springframework.batch.item.file.mapping.PassThroughFieldSetMapper" />
+				    -->
+				      
+					<!-- map to an object -->
+					<bean
+						class="org.springframework.batch.item.file.mapping.BeanWrapperFieldSetMapper">
+						<property name="prototypeBeanName" value="report" />
+					</bean>
+					
+				</property>
+
+			</bean>
+		</property>
+
+	</bean>
+		
+	
+		<bean id="customerFeeDetailsWriter"
+		class="org.springframework.batch.item.database.JdbcBatchItemWriter">
+		<property name="dataSource" ref="dataSource" />
+		
+		<property name="sql">
+		<value>
+            <![CDATA[        
+            	insert into fee_info(phone_number,fee_amount,created_on) values (:phoneNumber,100,now())
+            ]]>
+			</value>
+			</property>
+		<!-- It will take care matching between object property and sql name parameter -->
+		<property name="itemSqlParameterSourceProvider">
+			<bean
+				class="org.springframework.batch.item.database.BeanPropertyItemSqlParameterSourceProvider" />
+		</property>
+	</bean>
+	
+	
+	 <!-- ItemReader which reads from database and returns the row mapped by 
+        rowMapper -->
+    <bean id="databaseItemReader"
+        class="org.springframework.batch.item.database.JdbcCursorItemReader">
+ 
+        <property name="dataSource" ref="dataSource" />
+ 
+        <property name="sql"
+            value="SELECT sum(fee_amount) fee_amount,created_on FROM fee_info group by created_on" />
+ 
+        <property name="rowMapper">
+            <bean class="com.viva.CustomerProcessing.model.UserRowMapper" />
+        </property>
+ 
+    </bean>
+ 
+ 
+    <!-- ItemWriter writes a line into output flat file -->
+    <bean id="flatFileItemWriter" class="org.springframework.batch.item.file.FlatFileItemWriter"
+        scope="step">
+ 
+        <property name="resource" value="file:report/report.csv" />
+ 
+        <property name="lineAggregator">
+ 
+            <!-- An Aggregator which converts an object into delimited list of strings -->
+            <bean
+                class="org.springframework.batch.item.file.transform.DelimitedLineAggregator">
+ 
+                <property name="delimiter" value="," />
+ 
+                <property name="fieldExtractor">
+ 
+                    <!-- Extractor which returns the value of beans property through reflection -->
+                    <bean
+                        class="org.springframework.batch.item.file.transform.BeanWrapperFieldExtractor">
+                        <property name="names" value="feeAmount,createdOn" />
+                    </bean>
+                </property>
+            </bean>
+        </property>
+    </bean>
+    
+      <!-- Optional ItemProcessor to perform business logic/filtering on the input records -->
+    <bean id="customerItemProcessor" class="com.viva.CustomerProcessing.processor.CustomerItemProcessor" />
+     <bean id="feeInfoItemProcessor" class="com.viva.CustomerProcessing.processor.FeeInfoProcessor" />
+ 	<bean id="jobListner" class="com.viva.CustomerProcessing.Listener.JobListener"/>	
+
+</beans>
